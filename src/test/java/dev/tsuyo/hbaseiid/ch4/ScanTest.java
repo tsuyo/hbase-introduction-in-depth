@@ -1,8 +1,9 @@
 package dev.tsuyo.hbaseiid.ch4;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static dev.tsuyo.hbaseiid.ch4.Utils.*;
+import static dev.tsuyo.hbaseiid.Utils.*;
 
+import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.BeforeAll;

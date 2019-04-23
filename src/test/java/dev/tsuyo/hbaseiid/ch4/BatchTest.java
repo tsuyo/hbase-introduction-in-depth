@@ -1,5 +1,6 @@
 package dev.tsuyo.hbaseiid.ch4;
 
+import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,11 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static dev.tsuyo.hbaseiid.ch4.Utils.FAM;
-import static dev.tsuyo.hbaseiid.ch4.Utils.TABLE_NAME;
+import static dev.tsuyo.hbaseiid.Utils.FAM;
+import static dev.tsuyo.hbaseiid.Utils.TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

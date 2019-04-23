@@ -1,5 +1,6 @@
-package dev.tsuyo.hbaseiid.ch4;
+package dev.tsuyo.hbaseiid;
 
+import dev.tsuyo.hbaseiid.ch4.BasicTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
@@ -60,5 +61,9 @@ public class Utils {
     }
 
     return connection;
+  }
+
+  public static byte[] get(String s, int i) {
+    return Bytes.toBytes(s + i);
   }
 }
