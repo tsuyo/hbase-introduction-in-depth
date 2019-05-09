@@ -14,14 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static dev.tsuyo.hbaseiid.Utils.*;
+import static dev.tsuyo.hbaseiid.ByteConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+// TODO: Use Utils & ByteConstants
 public class FilterTest {
   private static final byte[][] ROWS = {
-    get("row", 0), get("prefix_row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
+    getByte("row", 0), getByte("prefix_row", 1), getByte("row", 2), getByte("row", 3), getByte("row", 4), getByte("row", 5)
   };
   private static final byte[][] COLS = {
-    get("col", 0), get("col", 1), get("prefix_col", 2), get("col", 3), get("col", 4)
+    getByte("col", 0), getByte("col", 1), getByte("prefix_col", 2), getByte("col", 3), getByte("col", 4)
   };
 
   private static final Logger logger = LoggerFactory.getLogger(FilterTest.class);
@@ -31,7 +33,7 @@ public class FilterTest {
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnection();
+    connection = Utils.getConnectionAndInit();
     table = connection.getTable(TABLE_NAME);
     put(table);
   }
@@ -45,7 +47,7 @@ public class FilterTest {
     for (byte[] row : ROWS) {
       Put put = new Put(row);
       for (int i = 0; i < COLS.length; i++) {
-        put.addColumn(FAM, COLS[i], i * 100L, get("val row: " + Bytes.toString(row) + " col: ", i));
+        put.addColumn(FAM, COLS[i], i * 100L, getByte("val row: " + Bytes.toString(row) + " col: ", i));
       }
       table.put(put);
     }

@@ -10,11 +10,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static dev.tsuyo.hbaseiid.Utils.FAM;
+import static dev.tsuyo.hbaseiid.ByteConstants.FAM;
 import static dev.tsuyo.hbaseiid.Utils.TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// TODO: Use Utils & ByteConstants
 public class ReadModifyWriteTest {
   private static final byte[][] ROWS = {
     get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
@@ -40,7 +41,7 @@ public class ReadModifyWriteTest {
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnection();
+    connection = Utils.getConnectionAndInit();
   }
 
   void put(Table table) throws IOException {

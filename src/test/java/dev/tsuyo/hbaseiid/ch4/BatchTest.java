@@ -12,24 +12,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dev.tsuyo.hbaseiid.Utils.FAM;
+import static dev.tsuyo.hbaseiid.ByteConstants.FAM;
 import static dev.tsuyo.hbaseiid.Utils.TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// TODO: Use Utils & ByteConstants
 public class BatchTest {
   private static final byte[][] ROWS = {
-    get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
+      get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
   };
   private static final byte[][] COLS = {
-    get("col", 0), get("col", 1), get("col", 2), get("col", 3), get("col", 4)
+      get("col", 0), get("col", 1), get("col", 2), get("col", 3), get("col", 4)
   };
   private static final byte[][] VALS = {
-    get("val", 0), get("val", 1), get("val", 2), get("val", 3), get("val", 4)
+      get("val", 0), get("val", 1), get("val", 2), get("val", 3), get("val", 4)
   };
   // "ANO" stands for "another"
   private static final byte[][] VALS_ANO = {
-    get("anoVal", 0), get("anoVal", 1), get("anoVal", 2), get("anoVal", 3), get("anoVal", 4)
+      get("anoVal", 0), get("anoVal", 1), get("anoVal", 2), get("anoVal", 3), get("anoVal", 4)
   };
 
   private static final Logger logger = LoggerFactory.getLogger(BatchTest.class);
@@ -42,7 +43,7 @@ public class BatchTest {
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnection();
+    connection = Utils.getConnectionAndInit();
   }
 
   void put(Table table) throws IOException {

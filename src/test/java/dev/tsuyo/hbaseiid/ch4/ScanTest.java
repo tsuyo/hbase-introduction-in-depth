@@ -2,6 +2,7 @@ package dev.tsuyo.hbaseiid.ch4;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static dev.tsuyo.hbaseiid.Utils.*;
+import static dev.tsuyo.hbaseiid.ByteConstants.*;
 
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 
+// TODO: Use Utils & ByteConstants
 public class ScanTest {
   private static final byte[][] ROWS = {
     get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
@@ -35,7 +37,7 @@ public class ScanTest {
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnection();
+    connection = Utils.getConnectionAndInit();
   }
 
   void put(Table table) throws IOException {
