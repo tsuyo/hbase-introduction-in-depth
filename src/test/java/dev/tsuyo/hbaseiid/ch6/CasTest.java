@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.TreeSet;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static dev.tsuyo.hbaseiid.ByteConstants.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class CasTest {
@@ -61,7 +61,7 @@ public class CasTest {
 
     // check
     Result result = basicDao.get(new Get(ROW).addColumn(FAM, COL));
-    assertEquals(1, Utils.deserialize(result.getValue(FAM, COL)).size());
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COL)).size());
   }
 
   @Test
@@ -79,8 +79,8 @@ public class CasTest {
 
     // check
     Result result = basicDao.get(new Get(ROW).addColumn(FAM, COLS[1]).addColumn(FAM, COLS[2]));
-    assertEquals(1, Utils.deserialize(result.getValue(FAM, COLS[1])).size());
-    assertEquals(1, Utils.deserialize(result.getValue(FAM, COLS[2])).size());
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[1])).size());
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[2])).size());
   }
 
 }

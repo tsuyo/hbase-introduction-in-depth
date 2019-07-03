@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import static dev.tsuyo.hbaseiid.ByteConstants.*;
 
@@ -43,7 +42,7 @@ public class CasDao {
       Result result = table.get(get);
       byte[] oldValue = result.getValue(FAM, COL);
 
-      SortedSet<Long> set = Utils.deserialize(oldValue);
+      SortedSet<Long> set = Utils.deserializeAsSortedSetLong(oldValue);
       set.add(random.nextLong());
 
       Put put = new Put(ROW).addColumn(FAM, COL, Utils.serialize(set));
@@ -64,9 +63,9 @@ public class CasDao {
 
       Result result = table.get(get);
       byte[] oldUpdateNum = result.getValue(FAM, updateNum);
-      SortedSet<Long> set1 = Utils.deserialize(result.getValue(FAM, COLS[1]));
+      SortedSet<Long> set1 = Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[1]));
       set1.add(random.nextLong());
-      SortedSet<Long> set2 = Utils.deserialize(result.getValue(FAM, COLS[2]));
+      SortedSet<Long> set2 = Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[2]));
       set2.add(random.nextLong());
 
       Put put = new Put(ROW)
