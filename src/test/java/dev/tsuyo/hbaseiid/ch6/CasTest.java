@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.TreeSet;
 
-import static dev.tsuyo.hbaseiid.ByteConstants.*;
+import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -55,13 +55,13 @@ public class CasTest {
   @Test
   void testMutateWithoutConflict() throws IOException {
     // put a sample data
-    basicDao.put(new Put(ROW).addColumn(FAM, COL, Utils.serialize(new TreeSet<Long>())));
+    basicDao.put(new Put(ROW_BYTES).addColumn(FAM_BYTES, COL_BYTES, Utils.serialize(new TreeSet<Long>())));
 
     casDao.putWithoutConflict();
 
     // check
-    Result result = basicDao.get(new Get(ROW).addColumn(FAM, COL));
-    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COL)).size());
+    Result result = basicDao.get(new Get(ROW_BYTES).addColumn(FAM_BYTES, COL_BYTES));
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM_BYTES, COL_BYTES)).size());
   }
 
   @Test
@@ -69,18 +69,18 @@ public class CasTest {
     // put a sample data
     byte[] updateNum = Bytes.toBytes("update_num");
     basicDao.put(
-        new Put(ROW)
-            .addColumn(FAM, updateNum, Bytes.toBytes(0))
-            .addColumn(FAM, COLS[1], Utils.serialize(new TreeSet<Long>()))
-            .addColumn(FAM, COLS[2], Utils.serialize(new TreeSet<Long>()))
+        new Put(ROW_BYTES)
+            .addColumn(FAM_BYTES, updateNum, Bytes.toBytes(0))
+            .addColumn(FAM_BYTES, COLS[1], Utils.serialize(new TreeSet<Long>()))
+            .addColumn(FAM_BYTES, COLS[2], Utils.serialize(new TreeSet<Long>()))
     );
 
     casDao.putMultiColsWithoutConflict();
 
     // check
-    Result result = basicDao.get(new Get(ROW).addColumn(FAM, COLS[1]).addColumn(FAM, COLS[2]));
-    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[1])).size());
-    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[2])).size());
+    Result result = basicDao.get(new Get(ROW_BYTES).addColumn(FAM_BYTES, COLS[1]).addColumn(FAM_BYTES, COLS[2]));
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM_BYTES, COLS[1])).size());
+    assertEquals(1, Utils.deserializeAsSortedSetLong(result.getValue(FAM_BYTES, COLS[2])).size());
   }
 
 }

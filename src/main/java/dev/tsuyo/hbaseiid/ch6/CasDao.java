@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.SortedSet;
 
-import static dev.tsuyo.hbaseiid.ByteConstants.*;
+import static dev.tsuyo.hbaseiid.Constants.*;
 
 public class CasDao {
   private static final Logger logger = LoggerFactory.getLogger(CasDao.class);
@@ -20,7 +20,7 @@ public class CasDao {
 
   public CasDao(Connection conn) throws IOException {
     this.connection = conn;
-    this.table = connection.getTable(Utils.TABLE_NAME);
+    this.table = connection.getTable(NS_TBL_TABLE);
   }
 
   public void close() throws IOException {
@@ -28,8 +28,8 @@ public class CasDao {
   }
 
   public boolean checkAndPut() throws IOException {
-    Put put = new Put(ROW).addColumn(FAM, COL, VAL);
-    return table.checkAndMutate(ROW, FAM).qualifier(COL).ifNotExists().thenPut(put);
+    Put put = new Put(ROW_BYTES).addColumn(FAM_BYTES, COL_BYTES, VAL_BYTES);
+    return table.checkAndMutate(ROW_BYTES, FAM_BYTES).qualifier(COL_BYTES).ifNotExists().thenPut(put);
   }
 
   public void putWithoutConflict() throws IOException {
@@ -37,17 +37,17 @@ public class CasDao {
 
     while (true) {
       logger.info("trying to put w/o conflict...");
-      Get get = new Get(ROW).addColumn(FAM, COL);
+      Get get = new Get(ROW_BYTES).addColumn(FAM_BYTES, COL_BYTES);
 
       Result result = table.get(get);
-      byte[] oldValue = result.getValue(FAM, COL);
+      byte[] oldValue = result.getValue(FAM_BYTES, COL_BYTES);
 
       SortedSet<Long> set = Utils.deserializeAsSortedSetLong(oldValue);
       set.add(random.nextLong());
 
-      Put put = new Put(ROW).addColumn(FAM, COL, Utils.serialize(set));
+      Put put = new Put(ROW_BYTES).addColumn(FAM_BYTES, COL_BYTES, Utils.serialize(set));
 
-      if (table.checkAndMutate(ROW, FAM).qualifier(COL).ifEquals(oldValue).thenPut(put)) {
+      if (table.checkAndMutate(ROW_BYTES, FAM_BYTES).qualifier(COL_BYTES).ifEquals(oldValue).thenPut(put)) {
         break;
       }
     }
@@ -59,21 +59,21 @@ public class CasDao {
     while (true) {
       logger.info("trying to put multi cols w/o conflict...");
       byte[] updateNum = Bytes.toBytes("update_num");
-      Get get = new Get(ROW).addColumn(FAM, updateNum).addColumn(FAM, COLS[1]).addColumn(FAM, COLS[2]);
+      Get get = new Get(ROW_BYTES).addColumn(FAM_BYTES, updateNum).addColumn(FAM_BYTES, COLS[1]).addColumn(FAM_BYTES, COLS[2]);
 
       Result result = table.get(get);
-      byte[] oldUpdateNum = result.getValue(FAM, updateNum);
-      SortedSet<Long> set1 = Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[1]));
+      byte[] oldUpdateNum = result.getValue(FAM_BYTES, updateNum);
+      SortedSet<Long> set1 = Utils.deserializeAsSortedSetLong(result.getValue(FAM_BYTES, COLS[1]));
       set1.add(random.nextLong());
-      SortedSet<Long> set2 = Utils.deserializeAsSortedSetLong(result.getValue(FAM, COLS[2]));
+      SortedSet<Long> set2 = Utils.deserializeAsSortedSetLong(result.getValue(FAM_BYTES, COLS[2]));
       set2.add(random.nextLong());
 
-      Put put = new Put(ROW)
-          .addColumn(FAM, updateNum, Bytes.incrementBytes(oldUpdateNum, 1))
-          .addColumn(FAM, COLS[1], Utils.serialize(set1))
-          .addColumn(FAM, COLS[2], Utils.serialize(set2));
+      Put put = new Put(ROW_BYTES)
+          .addColumn(FAM_BYTES, updateNum, Bytes.incrementBytes(oldUpdateNum, 1))
+          .addColumn(FAM_BYTES, COLS[1], Utils.serialize(set1))
+          .addColumn(FAM_BYTES, COLS[2], Utils.serialize(set2));
 
-      if (table.checkAndMutate(ROW, FAM).qualifier(updateNum).ifEquals(oldUpdateNum).thenPut(put)) {
+      if (table.checkAndMutate(ROW_BYTES, FAM_BYTES).qualifier(updateNum).ifEquals(oldUpdateNum).thenPut(put)) {
         break;
       }
     }

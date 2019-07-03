@@ -3,148 +3,111 @@ package dev.tsuyo.hbaseiid.ch4;
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static dev.tsuyo.hbaseiid.ByteConstants.FAM;
-import static dev.tsuyo.hbaseiid.Utils.TABLE_NAME;
+import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// TODO: Use Utils & ByteConstants
 public class ReadModifyWriteTest {
-  private static final byte[][] ROWS = {
-    get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
-  };
-  private static final byte[][] COLS = {
-    get("col", 0), get("col", 1), get("col", 2), get("col", 3), get("col", 4)
-  };
-  private static final byte[][] VALS = {
-    get("val", 0), get("val", 1), get("val", 2), get("val", 3), get("val", 4)
-  };
-  // "ANO" stands for "another"
-  private static final byte[][] VALS_ANO = {
-    get("anoVal", 0), get("anoVal", 1), get("anoVal", 2), get("anoVal", 3), get("anoVal", 4)
-  };
-
   private static final Logger logger = LoggerFactory.getLogger(ReadModifyWriteTest.class);
 
   private static Connection connection;
 
-  private static byte[] get(String s, int i) {
-    return Bytes.toBytes(s + i);
-  }
+  private BasicDao basicDao;
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnectionAndInit();
+    connection = Utils.getConnection();
   }
 
-  void put(Table table) throws IOException {
-    for (byte[] row : ROWS) {
-      Put put = new Put(row);
-      for (int i = 0; i < COLS.length; i++) {
-        put.addColumn(FAM, COLS[i], VALS[i]);
-      }
-      table.put(put);
-    }
+  @AfterAll
+  static void tearDown() throws IOException {
+    connection.close();
   }
 
-  void delete(Table table) throws IOException {
-    Delete delete = new Delete(ROWS[1]);
-    table.delete(delete);
+  @BeforeEach
+  void initTable() throws IOException {
+    Utils.initTable(connection);
+    basicDao = new BasicDao(connection);
   }
 
-  void increment(Table table) throws IOException {
-    Increment increment = new Increment(ROWS[1]);
-    increment.addColumn(FAM, COLS[1], 1);
-    Result result = table.increment(increment);
-    assertEquals(1L, Bytes.toLong(result.getValue(FAM, COLS[1])));
-
-    increment = new Increment(ROWS[1]);
-    increment.addColumn(FAM, COLS[1], 2);
-    result = table.increment(increment);
-    assertEquals(3L, Bytes.toLong(result.getValue(FAM, COLS[1])));
-  }
-
-  void append(Table table) throws IOException {
-    Append append = new Append(ROWS[1]);
-    append.addColumn(FAM, COLS[1], VALS_ANO[1]);
-    append.addColumn(FAM, COLS[2], VALS_ANO[2]);
-    Result result = table.append(append);
-    assertEquals(
-        Bytes.toString(VALS[1]) + Bytes.toString(VALS_ANO[1]),
-        Bytes.toString(result.getValue(FAM, COLS[1])));
-    assertEquals(
-        Bytes.toString(VALS[2]) + Bytes.toString(VALS_ANO[2]),
-        Bytes.toString(result.getValue(FAM, COLS[2])));
-  }
-
-  void checkAndPut(Table table) throws IOException {
-    Put put = new Put(ROWS[1]).addColumn(FAM, COLS[1], VALS_ANO[1]);
-    boolean result =
-        table.checkAndMutate(ROWS[1], FAM).qualifier(COLS[1]).ifEquals(VALS[1]).thenPut(put);
-    assertEquals(true, result);
-    // check the value
-    Get get = new Get(ROWS[1]).addColumn(FAM, COLS[1]);
-    Result getResult = table.get(get);
-    assertArrayEquals(VALS_ANO[1], getResult.getValue(FAM, COLS[1]));
-  }
-
-  void checkAndDelete(Table table) throws IOException {
-    Delete delete = new Delete(ROWS[1]);
-    boolean result =
-        table.checkAndMutate(ROWS[1], FAM).qualifier(COLS[1]).ifEquals(VALS[1]).thenDelete(delete);
-    assertEquals(true, result);
-    // check the value
-    Get get = new Get(ROWS[1]);
-    boolean existsResult = table.exists(get);
-    assertEquals(false, existsResult);
+  @AfterEach
+  void close() throws IOException {
+    basicDao.close();
   }
 
   @Test
   void testIncrement() throws IOException {
-    Table table = connection.getTable(TABLE_NAME);
+    Increment increment = new Increment(ROWS[1])
+        .addColumn(FAM_BYTES, COLS[1], 1);
+    Result result = basicDao.increment(increment);
+    // If this col doesn't exist, just put a value instead of increment
+    assertEquals(1L, Bytes.toLong(result.getValue(FAM_BYTES, COLS[1])));
 
-    increment(table);
-
-    table.close();
+    increment = new Increment(ROWS[1])
+        .addColumn(FAM_BYTES, COLS[1], 2);
+    result = basicDao.increment(increment);
+    assertEquals(3L, Bytes.toLong(result.getValue(FAM_BYTES, COLS[1])));
   }
 
   @Test
   void testAppend() throws IOException {
-    Table table = connection.getTable(TABLE_NAME);
+    putSample(); // put sample data
 
-    delete(table);
-    put(table);
-    append(table);
-
-    table.close();
+    Append append = new Append(ROWS[1])
+        .addColumn(FAM_BYTES, COLS[1], LAVS[1])
+        .addColumn(FAM_BYTES, COLS[2], LAVS[2]);
+    Result result = basicDao.append(append);
+    // should return an "appended" value
+    assertEquals(
+        Bytes.toString(VALS[1]) + Bytes.toString(LAVS[1]),
+        Bytes.toString(result.getValue(FAM_BYTES, COLS[1])));
+    assertEquals(
+        Bytes.toString(VALS[2]) + Bytes.toString(LAVS[2]),
+        Bytes.toString(result.getValue(FAM_BYTES, COLS[2])));
   }
 
   @Test
   void testCheckAndPut() throws IOException {
-    Table table = connection.getTable(TABLE_NAME);
+    putSample(); // put sample data
 
-    delete(table);
-    put(table);
-    checkAndPut(table);
-
-    table.close();
+    Put put = new Put(ROWS[1]).addColumn(FAM_BYTES, COLS[1], LAVS[1]);
+    boolean result =
+        basicDao.checkAndMutate(ROWS[1], FAM_BYTES).qualifier(COLS[1]).ifEquals(VALS[1]).thenPut(put);
+    assertEquals(true, result);
+    // check the value
+    Get get = new Get(ROWS[1]).addColumn(FAM_BYTES, COLS[1]);
+    Result getResult = basicDao.get(get);
+    assertArrayEquals(LAVS[1], getResult.getValue(FAM_BYTES, COLS[1]));
   }
 
   @Test
   void testCheckAndDelete() throws IOException {
-    Table table = connection.getTable(TABLE_NAME);
+    putSample();
 
-    delete(table);
-    put(table);
-    checkAndDelete(table);
-
-    table.close();
+    Delete delete = new Delete(ROWS[1]);
+    boolean result =
+        basicDao.checkAndMutate(ROWS[1], FAM_BYTES).qualifier(COLS[1]).ifEquals(VALS[1]).thenDelete(delete);
+    assertEquals(true, result);
+    // check the value
+    Get get = new Get(ROWS[1]);
+    boolean existsResult = basicDao.exists(get);
+    assertEquals(false, existsResult);
   }
+
+  private void putSample() throws IOException {
+    for (byte[] row : ROWS) {
+      Put put = new Put(row);
+      for (int i = 0; i < COLS.length; i++) {
+        put.addColumn(FAM_BYTES, COLS[i], VALS[i]);
+      }
+      basicDao.put(put);
+    }
+  }
+
 }

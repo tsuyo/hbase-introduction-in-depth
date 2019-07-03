@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static dev.tsuyo.hbaseiid.Utils.*;
-import static dev.tsuyo.hbaseiid.ByteConstants.*;
+import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-// TODO: Use Utils & ByteConstants
+// TODO: Use Utils & Constants
 public class FilterTest {
   private static final byte[][] ROWS = {
     getByte("row", 0), getByte("prefix_row", 1), getByte("row", 2), getByte("row", 3), getByte("row", 4), getByte("row", 5)
@@ -34,7 +34,7 @@ public class FilterTest {
   @BeforeAll
   static void setup() throws IOException {
     connection = Utils.getConnectionAndInit();
-    table = connection.getTable(TABLE_NAME);
+    table = connection.getTable(NS_TBL_TABLE);
     put(table);
   }
 
@@ -47,7 +47,7 @@ public class FilterTest {
     for (byte[] row : ROWS) {
       Put put = new Put(row);
       for (int i = 0; i < COLS.length; i++) {
-        put.addColumn(FAM, COLS[i], i * 100L, getByte("val row: " + Bytes.toString(row) + " col: ", i));
+        put.addColumn(FAM_BYTES, COLS[i], i * 100L, getByte("val row: " + Bytes.toString(row) + " col: ", i));
       }
       table.put(put);
     }
@@ -66,8 +66,8 @@ public class FilterTest {
 
     ResultScanner scanner = table.getScanner(scan);
     for (Result result : scanner) {
-      assertTrue(result.containsColumn(FAM, COLS[1]));
-      assertFalse(result.containsColumn(FAM, COLS[2]));
+      assertTrue(result.containsColumn(FAM_BYTES, COLS[1]));
+      assertFalse(result.containsColumn(FAM_BYTES, COLS[2]));
     }
   }
 
@@ -79,9 +79,9 @@ public class FilterTest {
     Scan scan = new Scan().setFilter(new TimestampsFilter(timestamps));
     ResultScanner scanner = table.getScanner(scan);
     for (Result result : scanner) {
-      assertTrue(result.containsColumn(FAM, COLS[1]));
-      assertTrue(result.containsColumn(FAM, COLS[2]));
-      assertFalse(result.containsColumn(FAM, COLS[3]));
+      assertTrue(result.containsColumn(FAM_BYTES, COLS[1]));
+      assertTrue(result.containsColumn(FAM_BYTES, COLS[2]));
+      assertFalse(result.containsColumn(FAM_BYTES, COLS[3]));
     }
   }
 
@@ -97,8 +97,8 @@ public class FilterTest {
     Scan scan = new Scan().setFilter(new ColumnPrefixFilter(Bytes.toBytes("prefix")));
     ResultScanner scanner = table.getScanner(scan);
     for (Result result : scanner) {
-      assertFalse(result.containsColumn(FAM, COLS[1]));
-      assertTrue(result.containsColumn(FAM, COLS[2]));
+      assertFalse(result.containsColumn(FAM_BYTES, COLS[1]));
+      assertTrue(result.containsColumn(FAM_BYTES, COLS[2]));
     }
   }
 
@@ -107,30 +107,30 @@ public class FilterTest {
     Get get1 = new Get(ROWS[1]).setFilter(new ColumnPaginationFilter(2, 1));
     Result result1 = table.get(get1);
     assertEquals(2, result1.size());
-    assertTrue(result1.containsColumn(FAM, COLS[1]));
-    assertTrue(result1.containsColumn(FAM, COLS[3]));
+    assertTrue(result1.containsColumn(FAM_BYTES, COLS[1]));
+    assertTrue(result1.containsColumn(FAM_BYTES, COLS[3]));
 
     // filter by column name
     Get get2 = new Get(ROWS[1]).setFilter(new ColumnPaginationFilter(2, COLS[1]));
     Result result2 = table.get(get1);
     assertEquals(2, result2.size());
-    assertTrue(result2.containsColumn(FAM, COLS[1]));
-    assertTrue(result2.containsColumn(FAM, COLS[3]));
+    assertTrue(result2.containsColumn(FAM_BYTES, COLS[1]));
+    assertTrue(result2.containsColumn(FAM_BYTES, COLS[3]));
   }
 
   void columnRangeFilter(Table table) throws IOException {
     Get get = new Get(ROWS[1]).setFilter(new ColumnRangeFilter(COLS[1], true, COLS[4], false));
     Result result = table.get(get);
     // assertEquals(2, result.size());
-    assertTrue(result.containsColumn(FAM, COLS[1]));
-    assertTrue(result.containsColumn(FAM, COLS[3]));
+    assertTrue(result.containsColumn(FAM_BYTES, COLS[1]));
+    assertTrue(result.containsColumn(FAM_BYTES, COLS[3]));
   }
 
   void singleColumnValueFilter(Table table) throws IOException {
     Scan scan = new Scan();
     SingleColumnValueFilter filter =
         new SingleColumnValueFilter(
-            FAM,
+            FAM_BYTES,
             COLS[1],
             CompareOperator.EQUAL,
             new BinaryComparator(Bytes.toBytes("val row: row2, col: 1")));
@@ -194,7 +194,7 @@ public class FilterTest {
               || row.equals("row2")
               || row.equals("row3"));
       assertEquals(1, result.size());
-      assertTrue(result.containsColumn(FAM, COLS[1]));
+      assertTrue(result.containsColumn(FAM_BYTES, COLS[1]));
     }
   }
 
@@ -218,7 +218,7 @@ public class FilterTest {
         assertEquals(5, result.size());
       } else {
         assertEquals(1, result.size());
-        assertTrue(result.containsColumn(FAM, COLS[1]));
+        assertTrue(result.containsColumn(FAM_BYTES, COLS[1]));
       }
     }
   }

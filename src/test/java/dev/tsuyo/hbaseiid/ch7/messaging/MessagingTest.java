@@ -1,6 +1,7 @@
 package dev.tsuyo.hbaseiid.ch7.messaging;
 
 import dev.tsuyo.hbaseiid.ColumnFamilyOption;
+import dev.tsuyo.hbaseiid.Constants;
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.AfterAll;
@@ -31,7 +32,7 @@ public class MessagingTest {
 
   @BeforeEach
   void initTable() throws IOException {
-    Utils.initTable(connection, Utils.NS_STR, "message", Arrays.asList(
+    Utils.initTable(connection, Constants.NS_STR, "message", Arrays.asList(
         ColumnFamilyOption.from("m")
             .addParameter("TTL", "31536000")
             .addParameter("BLOOMFILTER", "NONE")

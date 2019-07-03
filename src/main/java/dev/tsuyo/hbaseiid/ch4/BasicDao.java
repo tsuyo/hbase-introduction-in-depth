@@ -1,11 +1,12 @@
 package dev.tsuyo.hbaseiid.ch4;
 
-import dev.tsuyo.hbaseiid.Utils;
+import dev.tsuyo.hbaseiid.Constants;
 import org.apache.hadoop.hbase.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class BasicDao {
   private static final Logger logger = LoggerFactory.getLogger(BasicDao.class);
@@ -16,8 +17,8 @@ public class BasicDao {
 
   public BasicDao(Connection conn) throws IOException {
     this.connection = conn;
-    this.table = connection.getTable(Utils.TABLE_NAME);
-    this.btable = connection.getBufferedMutator(Utils.TABLE_NAME);
+    this.table = connection.getTable(Constants.NS_TBL_TABLE);
+    this.btable = connection.getBufferedMutator(Constants.NS_TBL_TABLE);
   }
 
   public void close() throws IOException {
@@ -30,7 +31,11 @@ public class BasicDao {
   }
 
   public void putBatched(Put put) throws IOException {
+    // obsoleted: HTableInterface.setAutoFlush()
     btable.mutate(put);
+  }
+
+  public void flush() throws IOException {
     btable.flush();
   }
 
@@ -50,4 +55,23 @@ public class BasicDao {
     table.mutateRow(rm);
   }
 
+  public ResultScanner scan(Scan scan) throws IOException {
+    return table.getScanner(scan);
+  }
+
+  public Result increment(Increment increment) throws IOException {
+    return table.increment(increment);
+  }
+
+  public Result append(Append append) throws IOException {
+    return table.append(append);
+  }
+
+  public Table.CheckAndMutateBuilder checkAndMutate(byte[] row, byte[] family) throws IOException {
+    return table.checkAndMutate(row, family);
+  }
+
+  public void batch(final List<? extends Row> actions, final Object[] results) throws IOException, InterruptedException {
+    table.batch(actions, results);
+  }
 }

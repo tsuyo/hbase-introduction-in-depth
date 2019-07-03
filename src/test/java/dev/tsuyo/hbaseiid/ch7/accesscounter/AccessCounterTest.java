@@ -1,6 +1,7 @@
 package dev.tsuyo.hbaseiid.ch7.accesscounter;
 
 import dev.tsuyo.hbaseiid.ColumnFamilyOption;
+import dev.tsuyo.hbaseiid.Constants;
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.AfterAll;
@@ -32,7 +33,7 @@ public class AccessCounterTest {
 
   @BeforeEach
   void initTable() throws IOException {
-    Utils.initTable(connection, Utils.NS_STR, "access", Arrays.asList(
+    Utils.initTable(connection, Constants.NS_STR, "access", Arrays.asList(
         ColumnFamilyOption.from("d")
             .addParameter("TTL", "31536000")
             .addParameter("BLOOMFILTER", "ROW")

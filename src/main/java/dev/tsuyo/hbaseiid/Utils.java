@@ -17,12 +17,6 @@ import java.util.stream.IntStream;
 
 
 public class Utils {
-  public static final String ZK_HOST = "docker-host";
-  public static final int ZK_PORT = 2181;
-  public static final String NS_STR = "ns";
-  public static final String TABLE_STR = "tbl";
-  public static final String FAM_STR = "fam";
-  public static final TableName TABLE_NAME = TableName.valueOf(NS_STR, TABLE_STR);
 
   private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
@@ -33,7 +27,7 @@ public class Utils {
   }
 
   public static Connection getConnection() throws IOException {
-    return getConnection(ZK_HOST, ZK_PORT);
+    return getConnection(Constants.PROP_ZK_HOST, Constants.PROP_ZK_PORT);
   }
 
   public static Connection getConnection(String zkHost, int zkPort) throws IOException {
@@ -44,7 +38,7 @@ public class Utils {
   }
 
   public static void initTable(Connection connection) throws IOException {
-    initTable(connection, NS_STR, TABLE_STR, Arrays.asList(ColumnFamilyOption.from(FAM_STR).build()));
+    initTable(connection, Constants.NS_STR, Constants.TBL_STR, Arrays.asList(ColumnFamilyOption.from(Constants.FAM_STR).build()));
   }
 
   public static void initTable(Connection connection, String ns, String tbl, Collection<ColumnFamilyOption> cfopts) throws IOException {
@@ -89,7 +83,7 @@ public class Utils {
   }
 
   public static byte[][] getBytes(String prefix, int num) {
-    return IntStream.range(0, num).mapToObj(i -> Bytes.toBytes("prefix" + i)).toArray(byte[][]::new);
+    return IntStream.range(0, num).mapToObj(i -> Bytes.toBytes(prefix + i)).toArray(byte[][]::new);
   }
 
   public static <T> byte[] serialize(T obj) {

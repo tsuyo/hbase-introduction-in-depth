@@ -3,15 +3,14 @@ package dev.tsuyo.hbaseiid.ch4;
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 
-import static dev.tsuyo.hbaseiid.ByteConstants.*;
+import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -20,9 +19,27 @@ public class BasicTest {
 
   private static Connection connection;
 
+  private BasicDao basicDao;
+
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnectionAndInit();
+    connection = Utils.getConnection();
+  }
+
+  @AfterAll
+  static void tearDown() throws IOException {
+    connection.close();
+  }
+
+  @BeforeEach
+  void initTable() throws IOException {
+    Utils.initTable(connection);
+    basicDao = new BasicDao(connection);
+  }
+
+  @AfterEach
+  void close() throws IOException {
+    basicDao.close();
   }
 
   @Test
@@ -54,53 +71,87 @@ public class BasicTest {
   }
 
   @Test
-  void testBasicOperations() throws IOException {
-    BasicDao basicDao = new BasicDao(connection);
-
-    // put
-    basicDao.put(mkPut(ROWS[1]));
-    // put with batch
-    basicDao.putBatched(mkPut(ROWS[2]));
+  void testGet() throws IOException {
+    putSample(); // put sample data
 
     // get
     for (byte[] row : new byte[][]{ROWS[1], ROWS[2]}) {
       Result result = basicDao.get(mkGet(row));
-      assertArrayEquals(VALS[1], result.getValue(FAM, COLS[1]));
-      assertArrayEquals(VALS[2], result.getValue(FAM, COLS[2]));
+      assertArrayEquals(VALS[1], result.getValue(FAM_BYTES, COLS[1]));
+      assertArrayEquals(VALS[2], result.getValue(FAM_BYTES, COLS[2]));
     }
+  }
+
+  @Test
+  void testExists() throws IOException {
+    putSample(); // put sample data
 
     // exists
     for (byte[] row : new byte[][]{ROWS[1], ROWS[2]}) {
-      Get get = new Get(row).addColumn(FAM, COLS[1]);
+      Get get = new Get(row).addColumn(FAM_BYTES, COLS[1]);
+      boolean result = basicDao.exists(get);
+      assertEquals(true, result);
+    }
+  }
+
+  @Test
+  void testDelete() throws IOException {
+    putSample(); // put sample data
+
+    // exists (ROWS[1] & ROWS[2] should exist here)
+    for (byte[] row : new byte[][]{ROWS[1], ROWS[2]}) {
+      Get get = new Get(row);
       boolean result = basicDao.exists(get);
       assertEquals(true, result);
     }
 
     // delete
     for (byte[] row : new byte[][]{ROWS[1], ROWS[2]}) {
-      Delete delete = new Delete(row).addColumn(FAM, COLS[1]).addColumn(FAM, COLS[2], 100L);
-      basicDao.delete(delete);
+      Delete delete = new Delete(row).addColumn(FAM_BYTES, COLS[1]).addColumn(FAM_BYTES, COLS[2], 100L);
+      basicDao.delete(delete); // atomic as PUT
     }
 
-    // mutateRow
-    Mutation put = new Put(ROWS[1]).addColumn(FAM, COLS[1], VALS[1]);
-    Mutation delete = new Delete(ROWS[1]).addColumn(FAM, COLS[1]);
-    RowMutations rowMutations = new RowMutations(ROWS[1]).add(put).add(delete);
-    basicDao.mutateRow(rowMutations);
+    // exists (ROWS[1] & ROWS[2] should NOT exist here)
+    for (byte[] row : new byte[][]{ROWS[1], ROWS[2]}) {
+      Get get = new Get(row);
+      boolean result = basicDao.exists(get);
+      assertEquals(false, result);
+    }
+  }
 
-    basicDao.close();
+  @Test
+  void testMutateRow() throws IOException {
+    // mutateRow
+    Mutation put = new Put(ROWS[1]).addColumn(FAM_BYTES, COLS[1], VALS[1]);
+    Mutation delete = new Delete(ROWS[1]).addColumn(FAM_BYTES, COLS[1]);
+    RowMutations rowMutations = new RowMutations(ROWS[1]).add(put).add(delete);
+    basicDao.mutateRow(rowMutations); // atomic as PUT
+
+    // exists (ROWS[1] should NOT exist here)
+    Get get = new Get(ROWS[1]);
+    boolean result = basicDao.exists(get);
+    assertEquals(false, result);
+  }
+
+  // PUT sample data
+  private void putSample() throws IOException {
+    // put
+    basicDao.put(mkPut(ROWS[1])); // PUT is atomic for a row (both col1 & col2 appear OR neither of them do)
+    // put with batch
+    basicDao.putBatched(mkPut(ROWS[2]));
+    basicDao.flush();
   }
 
   private Put mkPut(byte[] row) {
     return new Put(row)
-        .addColumn(FAM, COLS[1], VALS[1])
-        .addColumn(FAM, COLS[2], 100L, VALS[2]);
+        .addColumn(FAM_BYTES, COLS[1], VALS[1])
+        .addColumn(FAM_BYTES, COLS[2], 100L, VALS[2]); // 100L: timestamp
   }
 
   private Get mkGet(byte[] row) {
     return new Get(row)
-        .addColumn(FAM, COLS[1])
-        .addColumn(FAM, COLS[2]);
+        .addColumn(FAM_BYTES, COLS[1])
+        .addColumn(FAM_BYTES, COLS[2]);
   }
 
 }

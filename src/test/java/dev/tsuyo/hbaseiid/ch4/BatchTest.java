@@ -3,8 +3,7 @@ package dev.tsuyo.hbaseiid.ch4;
 import dev.tsuyo.hbaseiid.Utils;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,69 +11,62 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dev.tsuyo.hbaseiid.ByteConstants.FAM;
-import static dev.tsuyo.hbaseiid.Utils.TABLE_NAME;
+import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// TODO: Use Utils & ByteConstants
 public class BatchTest {
-  private static final byte[][] ROWS = {
-      get("row", 0), get("row", 1), get("row", 2), get("row", 3), get("row", 4), get("row", 5)
-  };
-  private static final byte[][] COLS = {
-      get("col", 0), get("col", 1), get("col", 2), get("col", 3), get("col", 4)
-  };
-  private static final byte[][] VALS = {
-      get("val", 0), get("val", 1), get("val", 2), get("val", 3), get("val", 4)
-  };
-  // "ANO" stands for "another"
-  private static final byte[][] VALS_ANO = {
-      get("anoVal", 0), get("anoVal", 1), get("anoVal", 2), get("anoVal", 3), get("anoVal", 4)
-  };
-
   private static final Logger logger = LoggerFactory.getLogger(BatchTest.class);
 
   private static Connection connection;
 
-  private static byte[] get(String s, int i) {
-    return Bytes.toBytes(s + i);
-  }
+  private BasicDao basicDao;
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnectionAndInit();
+    connection = Utils.getConnection();
   }
 
-  void put(Table table) throws IOException {
-    Put put2 = new Put(ROWS[2]).addColumn(FAM, COLS[1], VALS[1]); // for GET
-    Put put3 = new Put(ROWS[3]).addColumn(FAM, COLS[1], VALS[1]); // for DELETE
-
-    table.put(put2);
-    table.put(put3);
+  @AfterAll
+  static void tearDown() throws IOException {
+    connection.close();
   }
 
-  void batch(Table table) throws IOException {
+  @BeforeEach
+  void initTable() throws IOException {
+    Utils.initTable(connection);
+    basicDao = new BasicDao(connection);
+  }
+
+  @AfterEach
+  void close() throws IOException {
+    basicDao.close();
+  }
+
+  @Test
+  void testBatch() throws IOException {
+    putSample(); // put sample data
+
     List<Row> actions = new ArrayList<>();
 
-    Put put = new Put(ROWS[1]).addColumn(FAM, COLS[1], VALS[1]);
+    Put put = new Put(ROWS[1]).addColumn(FAM_BYTES, COLS[1], VALS[1]);
     actions.add(put);
 
-    Get get = new Get(ROWS[2]).addColumn(FAM, COLS[1]);
+    Get get = new Get(ROWS[2]).addColumn(FAM_BYTES, COLS[1]);
     actions.add(get);
 
-    Delete delete = new Delete(ROWS[3]).addColumn(FAM, COLS[1]);
+    Delete delete = new Delete(ROWS[3]).addColumn(FAM_BYTES, COLS[1]);
     actions.add(delete);
 
-    Increment increment = new Increment(ROWS[4]).addColumn(FAM, COLS[1], 1);
+    Increment increment = new Increment(ROWS[4]).addColumn(FAM_BYTES, COLS[1], 1);
     actions.add(increment);
 
-    Append append = new Append(ROWS[5]).addColumn(FAM, COLS[1], VALS[1]);
+    Append append = new Append(ROWS[5]).addColumn(FAM_BYTES, COLS[1], VALS[1]);
     actions.add(append);
 
     Object[] results = new Object[actions.size()];
     try {
-      table.batch(actions, results);
+      basicDao.batch(actions, results);
       // if Put and Delete are success, an empty Result returns
       for (int i = 0; i < results.length; i++) {
         if (results[i] instanceof Result) {
@@ -85,13 +77,13 @@ public class BatchTest {
               assertEquals(true, result.isEmpty());
               break;
             case 1: // Get
-              assertArrayEquals(VALS[1], result.getValue(FAM, COLS[1]));
+              assertArrayEquals(VALS[1], result.getValue(FAM_BYTES, COLS[1]));
               break;
             case 3: // Increment
-              assertEquals(1L, Bytes.toLong(result.getValue(FAM, COLS[1])));
+              assertEquals(1L, Bytes.toLong(result.getValue(FAM_BYTES, COLS[1])));
               break;
             case 4: // Append
-              assertArrayEquals(VALS[1], result.getValue(FAM, COLS[1]));
+              assertArrayEquals(VALS[1], result.getValue(FAM_BYTES, COLS[1]));
               break;
           }
         }
@@ -105,13 +97,12 @@ public class BatchTest {
     }
   }
 
-  @Test
-  void testBatch() throws IOException {
-    Table table = connection.getTable(TABLE_NAME);
+  private void putSample() throws IOException {
+    Put put2 = new Put(ROWS[2]).addColumn(FAM_BYTES, COLS[1], VALS[1]); // for GET
+    Put put3 = new Put(ROWS[3]).addColumn(FAM_BYTES, COLS[1], VALS[1]); // for DELETE
 
-    put(table);
-    batch(table);
-
-    table.close();
+    basicDao.put(put2);
+    basicDao.put(put3);
   }
+
 }
