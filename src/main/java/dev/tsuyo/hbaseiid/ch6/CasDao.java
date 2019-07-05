@@ -73,6 +73,7 @@ public class CasDao {
           .addColumn(FAM_BYTES, COLS[1], Utils.serialize(set1))
           .addColumn(FAM_BYTES, COLS[2], Utils.serialize(set2));
 
+      // check updateNum is intact
       if (table.checkAndMutate(ROW_BYTES, FAM_BYTES).qualifier(updateNum).ifEquals(oldUpdateNum).thenPut(put)) {
         break;
       }

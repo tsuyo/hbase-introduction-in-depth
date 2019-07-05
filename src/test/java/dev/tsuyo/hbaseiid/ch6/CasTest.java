@@ -55,7 +55,6 @@ public class CasTest {
     assertFalse(casDao.checkAndPut()); // 2nd (and further try) fails
   }
 
-  // TODO: from here
   @Test
   void testMutateWithoutConflict() throws IOException {
     // put a sample data
