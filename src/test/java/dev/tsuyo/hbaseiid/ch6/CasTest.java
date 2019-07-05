@@ -7,10 +7,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,33 +22,40 @@ public class CasTest {
   private static final Logger logger = LoggerFactory.getLogger(CasTest.class);
 
   private static Connection connection;
-  private static BasicDao basicDao;
-  private static CasDao casDao;
+
+  private BasicDao basicDao;
+  private CasDao casDao;
 
   @BeforeAll
   static void setup() throws IOException {
-    connection = Utils.getConnectionAndInit();
-    basicDao = new BasicDao(connection);
-    casDao = new CasDao(connection);
+    connection = Utils.getConnection();
+  }
+
+  @AfterAll
+  static void tearDown() throws IOException {
+    connection.close();
   }
 
   @BeforeEach
   void initTable() throws IOException {
     Utils.initTable(connection);
+    basicDao = new BasicDao(connection);
+    casDao = new CasDao(connection);
   }
 
-  @AfterAll
-  static void tearDown() throws IOException {
+  @AfterEach
+  void close() throws IOException {
+    basicDao.close();
     casDao.close();
-    connection.close();
   }
 
   @Test
   void testCheckAndMutate() throws IOException {
-    assertTrue(casDao.checkAndPut());
-    assertFalse(casDao.checkAndPut());
+    assertTrue(casDao.checkAndPut());  // 1st CAS (check & put) succeed
+    assertFalse(casDao.checkAndPut()); // 2nd (and further try) fails
   }
 
+  // TODO: from here
   @Test
   void testMutateWithoutConflict() throws IOException {
     // put a sample data

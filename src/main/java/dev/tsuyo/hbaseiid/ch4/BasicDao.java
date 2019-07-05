@@ -1,12 +1,14 @@
 package dev.tsuyo.hbaseiid.ch4;
 
-import dev.tsuyo.hbaseiid.Constants;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+
+import static dev.tsuyo.hbaseiid.Constants.*;
 
 public class BasicDao {
   private static final Logger logger = LoggerFactory.getLogger(BasicDao.class);
@@ -16,9 +18,14 @@ public class BasicDao {
   private BufferedMutator btable;
 
   public BasicDao(Connection conn) throws IOException {
+    this(conn, NS_STR, TBL_STR);
+  }
+
+  public BasicDao(Connection conn, String ns, String table) throws IOException {
     this.connection = conn;
-    this.table = connection.getTable(Constants.NS_TBL_TABLE);
-    this.btable = connection.getBufferedMutator(Constants.NS_TBL_TABLE);
+    TableName tableName = TableName.valueOf(ns, table);
+    this.table = connection.getTable(tableName);
+    this.btable = connection.getBufferedMutator(tableName);
   }
 
   public void close() throws IOException {

@@ -82,8 +82,8 @@ public class Utils {
     return Bytes.toBytes(s + i);
   }
 
-  public static byte[][] getBytes(String prefix, int num) {
-    return IntStream.range(0, num).mapToObj(i -> Bytes.toBytes(prefix + i)).toArray(byte[][]::new);
+  public static byte[][] getBytes(String format, int num) {
+    return IntStream.range(0, num).mapToObj(i -> Bytes.toBytes(String.format(format, i))).toArray(byte[][]::new);
   }
 
   public static <T> byte[] serialize(T obj) {
