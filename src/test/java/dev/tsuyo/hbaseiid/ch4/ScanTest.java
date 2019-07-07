@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import static dev.tsuyo.hbaseiid.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ScanTest {
   private static final Logger logger = LoggerFactory.getLogger(ScanTest.class);
@@ -56,6 +57,7 @@ public class ScanTest {
         assertArrayEquals(VALS[i], colval);
       }
     }
+    assertEquals(rowi + 2, rowi); // ROWS[1], ROWS[2]
   }
 
   @Test

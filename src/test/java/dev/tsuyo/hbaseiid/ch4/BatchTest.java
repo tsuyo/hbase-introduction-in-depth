@@ -88,7 +88,7 @@ public class BatchTest {
           }
         }
       }
-    } catch (InterruptedException e) {
+    } catch (Exception e) {
       for (Object result : results) {
         if (result instanceof Exception) {
           logger.error(((Exception) result).getMessage());

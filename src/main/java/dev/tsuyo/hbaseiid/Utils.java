@@ -76,6 +76,8 @@ public class Utils {
       logger.info("Creating table {}...", tableName.getNameAsString());
       admin.createTable(desc);
     }
+
+    admin.close();
   }
 
   public static byte[] getByte(String s, int i) {
