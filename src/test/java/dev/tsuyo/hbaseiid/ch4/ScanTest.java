@@ -57,7 +57,7 @@ public class ScanTest {
         assertArrayEquals(VALS[i], colval);
       }
     }
-    assertEquals(rowi + 2, rowi); // ROWS[1], ROWS[2]
+    assertEquals(3, rowi); // scanner should have ROWS[1], ROWS[2], so rowi should be 3 now
   }
 
   @Test
